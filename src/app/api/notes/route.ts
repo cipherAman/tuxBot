@@ -4,13 +4,7 @@ import { StorageService } from '@/lib/storage';
 export const dynamic = 'force-dynamic';
 
 export async function GET() {
-  try {
-    const docs = await StorageService.getDocuments();
-    return NextResponse.json({ ok: true, documents: docs });
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : String(err);
-    return NextResponse.json({ error: msg }, { status: 500 });
-  }
+  return NextResponse.json({ ok: true, documents: [] });
 }
 
 export async function DELETE(req: NextRequest) {

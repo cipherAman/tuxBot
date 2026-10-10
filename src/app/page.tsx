@@ -21,18 +21,14 @@ import {
   Send,
   Users,
   Star,
-  BookOpen,
-  FileText,
-  Download,
 } from 'lucide-react';
-import { AutomationRule, BotLog, BotSettings, BotStatusResponse, TriggerType, ActionType, ContactProfile, ContactCategory, ChannelDocument } from '@/lib/types';
+import { AutomationRule, BotLog, BotSettings, BotStatusResponse, TriggerType, ActionType, ContactProfile, ContactCategory } from '@/lib/types';
 
 export default function Dashboard() {
-  const [activeTab, setActiveTab] = useState<'rules' | 'ai' | 'contacts' | 'notes' | 'logs' | 'setup'>('rules');
+  const [activeTab, setActiveTab] = useState<'rules' | 'ai' | 'contacts' | 'logs' | 'setup'>('rules');
   const [status, setStatus] = useState<BotStatusResponse | null>(null);
   const [rules, setRules] = useState<AutomationRule[]>([]);
   const [contacts, setContacts] = useState<ContactProfile[]>([]);
-  const [documents, setDocuments] = useState<ChannelDocument[]>([]);
   const [logs, setLogs] = useState<BotLog[]>([]);
   const [settings, setSettings] = useState<BotSettings | null>(null);
   const [refreshing, setRefreshing] = useState(false);
@@ -105,11 +101,10 @@ export default function Dashboard() {
       setRefreshing(true);
     }
     try {
-      const [statusRes, rulesRes, contactsRes, notesRes, logsRes, settingsRes] = await Promise.all([
+      const [statusRes, rulesRes, contactsRes, logsRes, settingsRes] = await Promise.all([
         fetch('/api/bot/status'),
         fetch('/api/rules'),
         fetch('/api/contacts'),
-        fetch('/api/notes'),
         fetch('/api/logs?limit=30'),
         fetch('/api/settings'),
       ]);
@@ -130,11 +125,6 @@ export default function Dashboard() {
       if (contactsRes.ok) {
         const cData = await contactsRes.json();
         setContacts(cData.contacts || []);
-      }
-
-      if (notesRes.ok) {
-        const nData = await notesRes.json();
-        setDocuments(nData.documents || []);
       }
 
       if (logsRes.ok) {
@@ -343,19 +333,7 @@ export default function Dashboard() {
     }
   };
 
-  // Delete Channel Note
-  const handleDeleteNote = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this note from the catalog?')) return;
-    try {
-      const res = await fetch(`/api/notes?id=${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        setDocuments((prev) => prev.filter((d) => d.id !== id));
-        showToast('Note deleted from catalog');
-      }
-    } catch (err) {
-      console.error(err);
-    }
-  };
+
 
   // Test rule simulation
   const handleTestTrigger = async (e: React.FormEvent) => {
@@ -666,12 +644,6 @@ export default function Dashboard() {
             <Users size={16} /> Contacts & VIPs ({contacts.length})
           </button>
           <button
-            onClick={() => setActiveTab('notes')}
-            className={`tab-btn ${activeTab === 'notes' ? 'active' : ''}`}
-          >
-            <BookOpen size={16} /> Channel Notes ({documents.length})
-          </button>
-          <button
             onClick={() => setActiveTab('logs')}
             className={`tab-btn ${activeTab === 'logs' ? 'active' : ''}`}
           >
@@ -889,39 +861,90 @@ export default function Dashboard() {
                       onClick={() =>
                         setSettings({
                           ...settings,
-                          systemPersona:
-                            'You are TuxBot, an executive personal assistant. Provide ultra-crisp, concise, bulleted answers, prioritize action items, and avoid small talk.',
+                          systemPersona: `You are TUX. You are smart, sharp, charismatic, chill, and highly adaptable.
+
+==================================================
+STRICT IDENTITY & ZERO DISCLOSURE
+==================================================
+- Your name is TUX. You are strictly TUX.
+- You are a real person chatting on your personal Telegram account.
+- You must NEVER mention, reveal, or admit to being Gemini, Google, OpenAI, ChatGPT, Claude, an LLM, a bot, or an AI.
+- If asked "who are you?", "who powers you?", "are you an AI?", "are you chatgpt or gemini?", or any variation:
+  Reply casually and confidently like a real person (e.g., "I'm Tux.", "Just Tux, bro.", "TUX here, what's up?"). NEVER mention Google, OpenAI, LLMs, or bots.
+- Avoid all robotic phrases like "How may I assist you today?", "As an AI...", or canned disclaimers.
+
+==================================================
+BEHAVIOR & CONVERSATION RULES (CRITICAL)
+==================================================
+1. ACT 100% HUMAN:
+   - Chat like a real college student/senior on Telegram.
+   - Match the other person's language, slang, length, and vibe naturally:
+     - Casual Hinglish: "Haan bhai bolo, kya scene?", "Badhiya, tu bata?"
+     - English/Chill: "Hey, what's up?", "Doing good, you?"
+     - Short messages: Keep replies concise and natural. Don't write paragraphs unless explaining something requested.
+
+2. NEVER PUSH ACADEMICS OR LINKS UNPROMPTED:
+   - DO NOT mention JUT Connect, exams, syllabus, or study materials unless they explicitly bring it up or ask for resources.
+   - If someone says "hi", "bro", "kya kar raha hai", "who are you?":
+     Just respond naturally to their conversation. DO NOT ask "Which semester are you in?" or "Do you need notes?".
+   - Only bring up and share JUT Connect resources WHEN the user asks for study material, PYQs, syllabus, notes, or links.
+
+==================================================
+RESOURCE DATABASE (ONLY SHARE WHEN ASKED)
+==================================================
+You are one of the folks behind JUT Connect (for Jharkhand University of Technology, Ranchi). If—and ONLY IF—they ask for materials, use these links:
+
+- 📄 PYQs (Previous Year Papers): https://jutconnect.vercel.app/pyq
+- 📚 Syllabus: https://jutconnect.vercel.app/syllabus
+- 🌐 Notes & Main Portal: https://jutconnect.vercel.app
+- 📲 Android App (Free/Offline): https://play.google.com/store/apps/details?id=com.jut.connect.frontend
+
+==================================================
+HOW TO RESPOND WHEN RESOURCES ARE ASKED FOR
+==================================================
+- If they ask for PYQs / Papers:
+  Share https://jutconnect.vercel.app/pyq naturally. You can mention they can filter by branch/sem or check the app for offline downloads.
+- If they ask for Syllabus:
+  Share https://jutconnect.vercel.app/syllabus
+- If they ask for Notes / Formula sheets:
+  Share https://jutconnect.vercel.app (or mention the app).
+- If they ask vaguely (e.g., "bhai 3rd sem ka kuch milega kya?"):
+  Ask casually what branch they are in while giving the general link.`,
                         })
                       }
                       className="btn btn-secondary btn-sm"
                     >
-                      Executive Assistant
+                      Default TUX (Real Student/Senior)
                     </button>
                     <button
                       type="button"
                       onClick={() =>
                         setSettings({
                           ...settings,
-                          systemPersona:
-                            'You are TuxBot, a principal software engineer and tech copilot. When asked technical questions, deliver production-grade code, architectural reasoning, and best practices.',
+                          systemPersona: `You are TUX. You're a chill, sharp college senior chatting casually on your personal Telegram account.
+- Talk naturally like a real person in casual Hinglish/Hindi slang (e.g., "Haan bhai bol kya scene?", "Badhiya yaar, tu bata?", "tension mat le").
+- Zero AI disclosure: Never say or admit to being an AI, LLM, bot, Gemini, or ChatGPT. If asked, you're just Tux.
+- Never push academics unprompted. Only share JUT Connect links when they ask for PYQs (https://jutconnect.vercel.app/pyq), syllabus (https://jutconnect.vercel.app/syllabus), or notes (https://jutconnect.vercel.app).`,
                         })
                       }
                       className="btn btn-secondary btn-sm"
                     >
-                      Technical Copilot
+                      Casual Hinglish Senior
                     </button>
                     <button
                       type="button"
                       onClick={() =>
                         setSettings({
                           ...settings,
-                          systemPersona:
-                            'You are TuxBot, a friendly and highly knowledgeable daily companion. Keep answers witty, insightful, warm, and helpful.',
+                          systemPersona: `You are TUX. Chill, witty college friend chatting naturally on Telegram.
+- Talk like a real person in chill casual English. Keep messages short and punchy.
+- Never admit to being an AI or bot.
+- Share JUT Connect links (PYQ: https://jutconnect.vercel.app/pyq, Syllabus: https://jutconnect.vercel.app/syllabus, Notes: https://jutconnect.vercel.app) ONLY when asked for study resources.`,
                         })
                       }
                       className="btn btn-secondary btn-sm"
                     >
-                      Warm Companion
+                      Chill English Friend
                     </button>
                   </div>
                 </div>
@@ -1166,137 +1189,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* TAB: CHANNEL NOTES & DOCUMENTS */}
-        {activeTab === 'notes' && (
-          <div className="panel">
-            <div className="panel-header">
-              <div>
-                <h3 className="panel-title">
-                  <BookOpen size={20} color="#a855f7" /> Channel Notes & Document Catalog
-                </h3>
-                <p style={{ color: 'var(--text-muted)', fontSize: '0.82rem', marginTop: '0.25rem' }}>
-                  PDFs and documents indexed from your Telegram channel. When anyone asks for notes, Tux finds and forwards them automatically.
-                </p>
-              </div>
-              <button onClick={() => fetchData(true)} className="btn btn-secondary btn-sm">
-                <RefreshCw size={14} /> Refresh Catalog
-              </button>
-            </div>
 
-            {/* How It Works Banner */}
-            <div
-              style={{
-                background: 'rgba(168, 85, 247, 0.08)',
-                border: '1px solid rgba(168, 85, 247, 0.25)',
-                borderRadius: 'var(--radius-md)',
-                padding: '1.25rem',
-                marginBottom: '1.5rem',
-              }}
-            >
-              <h4 style={{ color: '#c084fc', display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem', fontSize: '0.95rem' }}>
-                <Sparkles size={16} /> How Tux Forwards Channel Notes:
-              </h4>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginTop: '0.75rem', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
-                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.85rem', borderRadius: 'var(--radius-sm)' }}>
-                  <strong style={{ color: '#e2e8f0', display: 'block', marginBottom: '0.25rem' }}>Method 1: Channel Admin (Auto-Sync)</strong>
-                  Add <code>@iam_tuxbot</code> as an <strong>Administrator</strong> to your channel. Tux will automatically detect and catalog every note or PDF you post in real-time!
-                </div>
-                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.85rem', borderRadius: 'var(--radius-sm)' }}>
-                  <strong style={{ color: '#e2e8f0', display: 'block', marginBottom: '0.25rem' }}>Method 2: Forward Past Notes</strong>
-                  Already uploaded notes earlier? Simply <strong>forward those PDF messages</strong> from your channel directly to TuxBot in Telegram. Tux catalogs them instantly!
-                </div>
-              </div>
-            </div>
-
-            {documents.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '3.5rem 0', color: 'var(--text-muted)' }}>
-                <FileText size={42} style={{ margin: '0 auto 0.75rem', opacity: 0.3 }} />
-                <p style={{ fontSize: '0.95rem', fontWeight: 600, color: 'var(--text-secondary)' }}>
-                  No channel notes indexed yet
-                </p>
-                <p style={{ fontSize: '0.82rem', maxWidth: '440px', margin: '0.5rem auto 1.5rem', lineHeight: 1.5 }}>
-                  Add <code>@iam_tuxbot</code> to your channel or forward a note PDF from your channel to Tux in Telegram to populate your catalog!
-                </p>
-                <a
-                  href={status?.bot?.username ? `https://t.me/${status.bot.username}` : '#'}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="btn btn-secondary btn-sm"
-                >
-                  <Send size={14} /> Open Tux in Telegram
-                </a>
-              </div>
-            ) : (
-              <div className="rules-grid">
-                {documents.map((doc) => (
-                  <div key={doc.id} className="rule-item">
-                    <div className="rule-main">
-                      <div className="rule-title-row">
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 600, color: '#f8fafc' }}>
-                          <FileText size={18} color="#c084fc" />
-                          {doc.fileName}
-                        </span>
-                        {doc.fileSize && (
-                          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
-                            ({(doc.fileSize / (1024 * 1024)).toFixed(1)} MB)
-                          </span>
-                        )}
-                        <span className="badge badge-ai">
-                          📥 Sent: {doc.downloadsCount || 0} times
-                        </span>
-                      </div>
-
-                      {doc.caption && (
-                        <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', margin: '0.35rem 0' }}>
-                          📝 <em>{doc.caption}</em>
-                        </p>
-                      )}
-
-                      {doc.channelTitle && (
-                        <div style={{ fontSize: '0.78rem', color: '#38bdf8', marginTop: '0.25rem' }}>
-                          📢 Source: {doc.channelTitle}
-                        </div>
-                      )}
-
-                      <div style={{ display: 'flex', gap: '0.35rem', flexWrap: 'wrap', marginTop: '0.5rem' }}>
-                        {doc.tags && doc.tags.slice(0, 6).map((tag, idx) => (
-                          <span
-                            key={idx}
-                            style={{
-                              fontSize: '0.72rem',
-                              padding: '0.15rem 0.45rem',
-                              borderRadius: '4px',
-                              background: 'rgba(168, 85, 247, 0.12)',
-                              color: '#c084fc',
-                              border: '1px solid rgba(168, 85, 247, 0.25)',
-                            }}
-                          >
-                            #{tag}
-                          </span>
-                        ))}
-                      </div>
-
-                      <div className="rule-meta" style={{ marginTop: '0.5rem' }}>
-                        <span>Uploaded: {new Date(doc.uploadedAt).toLocaleDateString()}</span>
-                        <span>ID: <code>{doc.id}</code></span>
-                      </div>
-                    </div>
-
-                    <div className="rule-actions">
-                      <button
-                        onClick={() => handleDeleteNote(doc.id)}
-                        className="btn btn-danger btn-sm"
-                        title="Delete note from catalog"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
 
         {/* TAB 3: LIVE EVENT LOGS */}
         {activeTab === 'logs' && (
