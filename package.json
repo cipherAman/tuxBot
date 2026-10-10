@@ -1,0 +1,30 @@
+{
+  "name": "tux-bot",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "dev:bot": "npx tsx --env-file=.env.local scripts/dev-polling.ts",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@google/genai": "^2.25.0",
+    "@upstash/redis": "^1.39.0",
+    "grammy": "^1.46.0",
+    "lucide-react": "^1.49.0",
+    "nanoid": "^6.0.1",
+    "next": "16.3.8",
+    "react": "19.2.8",
+    "react-dom": "19.2.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "eslint": "^9",
+    "eslint-config-next": "16.3.8",
+    "typescript": "^5"
+  }
+}
