@@ -51,8 +51,13 @@ export function getBot(): Bot {
     const settings = await StorageService.getSettings();
 
     // Check user restriction if configured
-    if (settings.restrictedMode && settings.allowedUserIds && settings.allowedUserIds.length > 0) {
-      const isAllowed = settings.allowedUserIds.includes(from.id);
+    const effectiveAllowed = Array.from(new Set([
+      ...CONFIG.allowedUserIds.map((id) => String(id).trim()),
+      ...(settings.allowedUserIds || []).map((id) => String(id).trim()),
+    ])).filter(Boolean);
+
+    if (settings.restrictedMode && effectiveAllowed.length > 0) {
+      const isAllowed = effectiveAllowed.includes(String(from.id).trim());
       if (!isAllowed) {
         await StorageService.addLog({
           userId: from.id,
@@ -63,10 +68,14 @@ export function getBot(): Bot {
         });
 
         if (ctx.message) {
-          await ctx.reply(
-            `🔒 *Access Restricted*\n\nTuxBot is configured as a private personal assistant.\nYour Telegram User ID is: \`${from.id}\`\n\nTo grant access, add this ID to \`ALLOWED_TELEGRAM_USER_IDS\` in your environment variables.`,
-            { parse_mode: 'Markdown' }
-          );
+          try {
+            await ctx.reply(
+              `🔒 *Access Restricted*\n\nTux is configured for specific users.\nYour Telegram User ID is: \`${from.id}\`\n\nTo grant access, add this ID to \`ALLOWED_TELEGRAM_USER_IDS\` in your environment variables.`,
+              { parse_mode: 'Markdown' }
+            );
+          } catch {
+            await ctx.reply(`🔒 Access Restricted. Your Telegram User ID is: ${from.id}`);
+          }
         }
         return;
       }
@@ -406,10 +415,10 @@ export function getBot(): Bot {
     const from = msg.from;
     const connectionId = msg.business_connection_id;
 
-    if (!from || !text) return;
-
     const allowedOwnerIds = CONFIG.allowedUserIds;
-    const isFromOwner = allowedOwnerIds.includes(from.id);
+    // Only the primary account owner (first ID) is considered "owner typing".
+    // If other allowed IDs (secondary accounts/friends) send messages, the bot will reply!
+    const isFromOwner = allowedOwnerIds.length > 0 && String(allowedOwnerIds[0]) === String(from.id);
 
     // If the message was typed by the account owner themselves:
     // Update their active presence timestamp (they are online) and do not reply

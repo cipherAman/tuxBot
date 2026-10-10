@@ -359,15 +359,33 @@ export class StorageService {
   // --- Settings ---
 
   static async getSettings(): Promise<BotSettings> {
+    let settings: BotSettings;
     if (this.redis) {
       try {
-        const settings = await this.redis.get<BotSettings>('tuxbot:settings');
-        if (settings) return settings;
+        const remote = await this.redis.get<BotSettings>('tuxbot:settings');
+        if (remote) {
+          settings = remote;
+        } else {
+          settings = memoryStorage.settings;
+        }
       } catch (err) {
         console.error('Redis getSettings error:', err);
+        settings = memoryStorage.settings;
       }
+    } else {
+      settings = memoryStorage.settings;
     }
-    return memoryStorage.settings;
+
+    // Always merge environment variable allowedUserIds so changes in Vercel take immediate effect
+    if (CONFIG.allowedUserIds.length > 0) {
+      const existing = (settings.allowedUserIds || [])
+        .map((id) => Number(id))
+        .filter((id) => !isNaN(id) && id > 0);
+      settings.allowedUserIds = Array.from(new Set([...CONFIG.allowedUserIds, ...existing]));
+      settings.restrictedMode = true;
+    }
+
+    return settings;
   }
 
   static async updateSettings(updates: Partial<BotSettings>): Promise<BotSettings> {

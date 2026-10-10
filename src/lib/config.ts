@@ -9,7 +9,8 @@ export const CONFIG = {
   // If set, only these Telegram user IDs can interact with the bot (private for personal use)
   allowedUserIds: (process.env.ALLOWED_TELEGRAM_USER_IDS || '')
     .split(',')
-    .map((id) => parseInt(id.trim(), 10))
+    .map((id) => id.replace(/['"\s]/g, '').trim())
+    .map((id) => parseInt(id, 10))
     .filter((id) => !isNaN(id) && id > 0),
 
   // Google Gemini API Configuration
