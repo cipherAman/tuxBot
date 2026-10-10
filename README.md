@@ -59,7 +59,9 @@ ALLOWED_TELEGRAM_USER_IDS=123456789
 GEMINI_API_KEY=AIzaSyYourGeminiApiKeyHere
 GEMINI_MODEL=gemini-2.0-flash
 
-# (Optional) Upstash Redis for cloud persistence
+# Optional: omit these two variables to run without Upstash.
+# Without Upstash, rules, settings, logs, and chat history are temporary
+# and may be lost when a serverless instance restarts.
 UPSTASH_REDIS_REST_URL=https://...upstash.io
 UPSTASH_REDIS_REST_TOKEN=...
 ```
@@ -90,7 +92,7 @@ Open [http://localhost:3000](http://localhost:3000) to access the TuxBot Managem
      - `ALLOWED_TELEGRAM_USER_IDS`
      - `GEMINI_API_KEY`
      - `GEMINI_MODEL` (`gemini-2.0-flash`)
-     - `UPSTASH_REDIS_REST_URL` & `UPSTASH_REDIS_REST_TOKEN`
+      - `UPSTASH_REDIS_REST_URL` & `UPSTASH_REDIS_REST_TOKEN` (optional)
      - `NEXT_PUBLIC_APP_URL` (e.g. `https://your-bot.vercel.app`)
 
 3. **Register Webhook with Telegram**:

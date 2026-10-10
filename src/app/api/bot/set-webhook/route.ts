@@ -14,7 +14,8 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const targetUrl = (body.url || `${CONFIG.appUrl}/api/webhook`).trim();
+    const requestOrigin = new URL(req.url).origin;
+    const targetUrl = (body.url || `${requestOrigin}/api/webhook`).trim();
 
     if (!targetUrl.startsWith('https://')) {
       return NextResponse.json(

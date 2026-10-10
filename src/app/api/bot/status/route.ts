@@ -1,14 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getBot } from '@/lib/bot';
 import { CONFIG, isBotConfigured, isGeminiConfigured } from '@/lib/config';
 import { StorageService } from '@/lib/storage';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export async function GET(req: NextRequest) {
   const rules = await StorageService.getRules();
   const logs = await StorageService.getLogs(10);
   const storageType = StorageService.getStorageType();
+  const usingRedis = storageType === 'redis';
+  const appUrl = new URL(req.url).origin;
 
   let botInfo = null;
   let webhookInfo = null;
@@ -51,7 +53,11 @@ export async function GET() {
     },
     storage: {
       type: storageType,
-      connected: true,
+      connected: usingRedis,
+      persistent: usingRedis,
+      message: usingRedis
+        ? 'Upstash Redis is configured.'
+        : 'Using in-memory storage. Data may be lost when the serverless instance restarts.',
     },
     stats: {
       totalRules: rules.length,
@@ -60,7 +66,7 @@ export async function GET() {
       totalLogs: logs.length,
     },
     config: {
-      appUrl: CONFIG.appUrl,
+      appUrl,
       restrictedMode: CONFIG.allowedUserIds.length > 0,
       allowedUsersCount: CONFIG.allowedUserIds.length,
     },
